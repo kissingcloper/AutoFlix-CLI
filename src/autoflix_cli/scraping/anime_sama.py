@@ -22,7 +22,10 @@ def get_website_url(portal=portals["anime-sama"]):
     if website_origin:
         return
 
-    response = scraper.get("https://" + portal)
+    if portal.startswith("http"):
+        response = scraper.get(portal)
+    else:
+        response = scraper.get("https://" + portal)
     response.raise_for_status()
 
     soup = BeautifulSoup(response.text, "html5lib")

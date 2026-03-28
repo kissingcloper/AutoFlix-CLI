@@ -12,7 +12,9 @@ from ..proxy import DNS_OPTIONS
 
 from .config import portals
 
-website_origin = "https://" + portals["french-stream"]
+website_origin = portals["french-stream"]
+if not website_origin.startswith("http"):
+    website_origin = "https://" + website_origin
 
 scraper = cffi_requests.Session(impersonate="chrome", curl_options=DNS_OPTIONS)
 
@@ -87,7 +89,7 @@ def get_movie(url: str, content: str) -> FrenchStreamMovie:
     movie_id = url.split("/")[-1].split("-")[0]
 
     movie_info_response = scraper.get(
-        f"https://french-stream.one/engine/ajax/film_api.php?id={movie_id}"
+        f"{website_origin}/engine/ajax/film_api.php?id={movie_id}"
     )
     movie_info_response.raise_for_status()
 
@@ -107,7 +109,7 @@ def get_series_season(url: str, content: str) -> FrenchStreamSeason:
     serie_id = url.split("/")[-1].split("-")[0]
 
     serie_info_response = scraper.get(
-        f"https://french-stream.one/ep-data.php?id={serie_id}"
+        f"{website_origin}/ep-data.php?id={serie_id}"
     )
     serie_info_response.raise_for_status()
 

@@ -16,18 +16,16 @@ class AnimeExtractor:
 
     def __init__(self):
         # --- Source URLs loaded from source_portal.jsonc ---
-        self.sudatchi_base = "https://" + portals.get("sudatchi", "sudatchi.com")
-        self.animetsu_base = "https://" + portals.get("animetsu", "animetsu.live")
-        self.allanime_api = (
-            "https://" + portals.get("allanime-api", "api.allanime.day") + "/api"
+        self.sudatchi_base = portals.get("sudatchi", "https://sudatchi.com")
+        self.animetsu_base = portals.get("animetsu", "https://animetsu.live")
+        self.animetsu_api = portals.get("animetsu-api", "https://b.animetsu.live")
+        self.animetsu_proxy = portals.get(
+            "animetsu-proxy", "https://ani.metsu.site/proxy"
         )
-        self.allanime_referer = "https://" + portals.get(
-            "allanime-referer", "allmanga.to"
-        )
-        self.anizone_base = "https://" + portals.get("anizone", "anizone.to")
-
-        # Replace subdomain for animetsu API (b.animetsu.live pattern)
-        self.animetsu_api = self.animetsu_base.replace("https://", "https://b.")
+        self.allanime_api = portals.get("allanime-api", "https://api.allanime.day/api")
+        self.allanime_referer = portals.get("allanime-referer", "https://allmanga.to")
+        self.allanime_base = portals.get("allanime-base", "https://allanime.day")
+        self.anizone_base = portals.get("anizone", "https://anizone.to")
 
         self.headers = {
             "Referer": self.sudatchi_base + "/",
@@ -162,7 +160,7 @@ class AnimeExtractor:
 
                 # Fix relative paths if necessary
                 if url.startswith("/"):
-                    url = "https://allanime.day" + url
+                    url = self.allanime_base + url
 
                 if not url.startswith("http"):
                     continue
@@ -230,7 +228,7 @@ class AnimeExtractor:
 
     def search_animetsu(self, title, anilist_id, episode=1):
         """Extraction from Animetsu (Updated Gojo V2 API)."""
-        base_api = f"{self.animetsu_base}/v2/api"
+        base_api = f"{self.animetsu_api}/v2/api"
         headers = self.animetsu_headers
 
         try:
@@ -303,7 +301,7 @@ class AnimeExtractor:
 
                             # Apply proxy if relative
                             if not url.startswith("http"):
-                                url = f"https://ani.metsu.site/proxy/{url.lstrip('/')}"
+                                url = f"{self.animetsu_proxy}/{url.lstrip('/')}"
 
                             results.append(
                                 {

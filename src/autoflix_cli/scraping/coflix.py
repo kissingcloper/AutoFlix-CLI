@@ -27,7 +27,10 @@ def get_website_url(portal=portals["coflix"]):
     if website_origin:
         return
 
-    response = scraper.head("https://" + portal)
+    if portal.startswith("http"):
+        response = scraper.head(portal)
+    else:
+        response = scraper.head("https://" + portal)
     response.raise_for_status()
 
     website_origin = response.url

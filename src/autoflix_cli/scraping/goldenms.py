@@ -14,14 +14,18 @@ class MediaExtractor:
 
     def __init__(self):
         # --- Source URLs loaded from source_portal.jsonc ---
-        self.multi_decrypt_api = (
-            "https://" + portals.get("multi-decrypt", "enc-dec.app") + "/api"
+        self.multi_decrypt_api = portals.get(
+            "multi-decrypt", "https://enc-dec.app/api"
         )
-        self.videasy_api = "https://" + portals.get("videasy", "api.videasy.net")
-        self.vidlink_api = "https://" + portals.get("vidlink", "vidlink.pro")
-        self.hexa_api = "https://" + portals.get("hexa", "theemoviedb.hexa.su")
-        self.mapple_api = "https://" + portals.get("mapple", "mapple.uk")
-        self.xpass_api = "https://" + portals.get("xpass", "play.xpass.top")
+        self.videasy_api = portals.get("videasy", "https://api.videasy.net")
+        self.vidlink_api = portals.get("vidlink", "https://vidlink.pro")
+        self.hexa_api = portals.get("hexa", "https://themoviedb.hexa.su")
+        self.mapple_api = portals.get("mapple", "https://mapple.uk")
+        self.xpass_api = portals.get("xpass", "https://play.xpass.top")
+
+        # --- Referers ---
+        self.videasy_referer = portals.get("videasy-referer", "https://cineby.gd")
+        self.hexa_referer = portals.get("hexa-referer", "https://hexa.su/")
 
         self.headers = {"Connection": "keep-alive"}
 
@@ -35,8 +39,8 @@ class MediaExtractor:
         headers = {
             "Accept": "*/*",
             "User-Agent": scraper.headers.get("User-Agent", "Mozilla/5.0"),
-            "Origin": "https://cineby.gd",
-            "Referer": "https://cineby.gd/",
+            "Origin": self.videasy_referer,
+            "Referer": self.videasy_referer + "/",
         }
 
         servers = [
@@ -176,7 +180,7 @@ class MediaExtractor:
                 "Accept": "text/plain",
                 "X-Api-Key": key,
                 "X-Fingerprint-Lite": "e9136c41504646444",
-                "Referer": "https://hexa.su/",
+                "Referer": self.hexa_referer,
                 "X-Cap-Token": cap_token,
             }
 
@@ -203,7 +207,7 @@ class MediaExtractor:
                             "quality": "Multi",
                             "url": src.get("url"),
                             "type": "M3U8",
-                            "headers": {"Referer": "https://hexa.su/"},
+                            "headers": {"Referer": self.hexa_referer},
                         }
                     )
                 return results
