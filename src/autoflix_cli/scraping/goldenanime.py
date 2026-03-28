@@ -1,8 +1,11 @@
-from curl_cffi import requests
+from curl_cffi import requests as cffi_requests
 import json
 import re
+from ..proxy import DNS_OPTIONS
 
 from .config import portals
+
+scraper = cffi_requests.Session(impersonate="chrome", curl_options=DNS_OPTIONS)
 
 
 class AnimeExtractor:
@@ -48,9 +51,7 @@ class AnimeExtractor:
         api_url = f"{base_url}/api/episode/{anilist_id}/{episode}"
 
         try:
-            response = requests.get(
-                api_url, headers=self.headers, timeout=10, impersonate="chrome"
-            )
+            response = scraper.get(api_url, headers=self.headers, timeout=10)
             if response.status_code != 200:
                 return []
 
@@ -93,7 +94,7 @@ class AnimeExtractor:
             }
             ext_search = {"persistedQuery": {"version": 1, "sha256Hash": search_hash}}
 
-            r = requests.get(
+            r = scraper.get(
                 api_url,
                 params={
                     "variables": json.dumps(vars_search),
@@ -101,7 +102,6 @@ class AnimeExtractor:
                 },
                 headers={"Referer": referer},
                 timeout=10,
-                impersonate="chrome",
             )
             shows = r.json().get("data", {}).get("shows", {}).get("edges", [])
             if not shows:
@@ -148,7 +148,7 @@ class AnimeExtractor:
             }
             ext_ep = {"persistedQuery": {"version": 1, "sha256Hash": ep_hash}}
 
-            r = requests.get(
+            r = scraper.get(
                 api_url,
                 params={
                     "variables": json.dumps(vars_ep),
@@ -156,7 +156,6 @@ class AnimeExtractor:
                 },
                 headers={"Referer": referer},
                 timeout=10,
-                impersonate="chrome",
             )
             sources = r.json().get("data", {}).get("episode", {}).get("sourceUrls", [])
 
@@ -185,11 +184,10 @@ class AnimeExtractor:
         base_url = self.anizone_base
         try:
             # 1. Search
-            r = requests.get(
+            r = scraper.get(
                 f"{base_url}/anime?search={title}",
                 headers=self.headers,
                 timeout=10,
-                impersonate="chrome",
             )
 
             # Find all relevant matches
@@ -219,11 +217,10 @@ class AnimeExtractor:
 
             # 2. Episode
             ep_url = f"{best_url}/{episode}"
-            r = requests.get(
+            r = scraper.get(
                 ep_url,
                 headers=self.headers,
                 timeout=10,
-                impersonate="chrome",
             )
             player_match = re.search(r'<media-player[^>]+src="([^"]+)"', r.text)
 
@@ -246,11 +243,10 @@ class AnimeExtractor:
             return []
         try:
             # 1. Search
-            r = requests.get(
+            r = scraper.get(
                 f"{self.animetsu_api}/api/anime/search/?query={title}",
                 headers=self.animetsu_headers,
                 timeout=10,
-                impersonate="chrome",
             )
             results = r.json().get("results", [])
             gojo_id = next(
@@ -265,11 +261,10 @@ class AnimeExtractor:
                 return []
 
             # 2. Servers
-            r = requests.get(
+            r = scraper.get(
                 f"{self.animetsu_api}/api/anime/servers/{gojo_id}/{episode}",
                 headers=self.animetsu_headers,
                 timeout=10,
-                impersonate="chrome",
             )
             servers_data = r.json()
 
@@ -281,11 +276,10 @@ class AnimeExtractor:
 
                 for lang in ["sub", "dub"]:
                     try:
-                        r = requests.get(
+                        r = scraper.get(
                             f"{self.animetsu_api}/api/anime/oppai/{gojo_id}/{episode}?server={server_id}&source_type={lang}",
                             headers=self.animetsu_headers,
                             timeout=10,
-                            impersonate="chrome",
                         )
                         stream_data = r.json()
                         sources = stream_data.get("sources", [])

@@ -1,6 +1,9 @@
-from curl_cffi import requests
+from curl_cffi import requests as cffi_requests
 import urllib.parse
 from .config import portals
+from ..proxy import DNS_OPTIONS
+
+scraper = cffi_requests.Session(impersonate="chrome", curl_options=DNS_OPTIONS)
 
 
 class MediaExtractor:
@@ -59,18 +62,13 @@ class MediaExtractor:
                 if episode:
                     url += f"&episodeId={episode}"
 
-                r = requests.get(
-                    url, headers=self.headers, timeout=10, impersonate="chrome"
-                )
+                r = scraper.get(url, headers=self.headers, timeout=10)
                 enc_data = r.text
 
                 # Decryption
                 payload = {"text": enc_data, "id": str(tmdb_id) if tmdb_id else ""}
-                r_dec = requests.post(
-                    f"{self.multi_decrypt_api}/dec-videasy",
-                    json=payload,
-                    timeout=10,
-                    impersonate="chrome",
+                r_dec = scraper.post(
+                    f"{self.multi_decrypt_api}/dec-videasy", json=payload, timeout=10
                 )
 
                 if r_dec.status_code == 200:
@@ -97,10 +95,8 @@ class MediaExtractor:
             return []
         try:
             # 1. Encrypt TMDB ID via API
-            r_enc = requests.get(
-                f"{self.multi_decrypt_api}/enc-vidlink?text={tmdb_id}",
-                timeout=10,
-                impersonate="chrome",
+            r_enc = scraper.get(
+                f"{self.multi_decrypt_api}/enc-vidlink?text={tmdb_id}", timeout=10
             )
             enc_data = r_enc.json().get("result")
 
@@ -115,7 +111,7 @@ class MediaExtractor:
             else:
                 url = f"{self.vidlink_api}/api/b/tv/{enc_data}/{season}/{episode}"
 
-            r = requests.get(url, headers=headers, timeout=10, impersonate="chrome")
+            r = scraper.get(url, headers=headers, timeout=10)
             data = r.json()
             m3u8_url = data.get("stream", {}).get("playlist")
 
@@ -148,15 +144,12 @@ class MediaExtractor:
 
             headers = {**self.headers, "Accept": "plain/text", "X-Api-Key": key}
 
-            r_enc = requests.get(url, headers=headers, timeout=10, impersonate="chrome")
+            r_enc = scraper.get(url, headers=headers, timeout=10)
             enc_data = r_enc.text
 
             payload = {"text": enc_data, "key": key}
-            r_dec = requests.post(
-                f"{self.multi_decrypt_api}/dec-hexa",
-                json=payload,
-                timeout=10,
-                impersonate="chrome",
+            r_dec = scraper.post(
+                f"{self.multi_decrypt_api}/dec-hexa", json=payload, timeout=10
             )
 
             if r_dec.status_code == 200:
