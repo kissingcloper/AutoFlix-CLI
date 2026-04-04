@@ -57,6 +57,7 @@ DEFAULT_PLAYERS = {
     "dingtezuni": {"type": "default"},
     "bingezove": {"type": "default"},
     "vidzy": {"type": "default"},
+    "ok.ru": {"type": "default"},
     "videzz": {
         "type": "vidoza",
         "mode": "proxy",

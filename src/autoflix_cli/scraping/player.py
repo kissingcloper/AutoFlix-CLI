@@ -37,12 +37,17 @@ actual_player_config = None
 
 
 def extract_hls_url(unpacked_code):
-    pattern = r'["\'](https?://[^"\']*master\.txt[^"\']*)["\']'
+    pattern = r'(https?://[^"\'\\\s]*master\.txt[^"\'\\\s]*)'
     match = re.search(pattern, unpacked_code)
     if match:
         return match.group(1)
 
-    pattern = r'["\'](https?://[^"\']*master\.m3u8[^"\']*)["\']'
+    pattern = r'(https?://[^"\'\\\s]*master\.m3u8[^"\'\\\s]*)'
+    match = re.search(pattern, unpacked_code)
+    if match:
+        return match.group(1)
+
+    pattern = r'(https?://[^"\'\\\s]*\.m3u8[^"\'\\\s]*)'
     match = re.search(pattern, unpacked_code)
     if match:
         return match.group(1)
