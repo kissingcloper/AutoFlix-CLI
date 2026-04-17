@@ -170,6 +170,17 @@ class ProgressTracker:
         self.data["language"] = lang_code
         self._save_data()
 
+    # --- Player Preferences ---
+
+    def get_player(self) -> Optional[str]:
+        return self.data.get("player")
+
+    def set_player(self, player_code: str):
+        self.data["player"] = player_code
+        self._save_data()
+
+
+
     def get_anilist_mapping(
         self, provider: str, series_title: str, season_title: Optional[str] = None
     ) -> Optional[int]:

@@ -14,6 +14,7 @@ from .update_checker import check_update
 from .tracker import tracker
 from .providers_registry import registry
 from .languages import LANGUAGES, get_language_display, get_all_languages
+from .player_manager import PLAYERS, get_player_display, get_all_players
 from .handlers import (
     anime_sama,
     coflix,
@@ -182,12 +183,16 @@ def main():
                 print_header("⚙ Settings")
                 token = tracker.get_anilist_token()
                 lang = tracker.get_language()
+                player = tracker.get_player()
+
 
                 lang_display = get_language_display(lang)
+                player_display = get_player_display(player)
 
                 opts = [
                     f"Update AniList Token ({'Set' if token else 'Not Set'})",
                     f"Update Language ({lang_display})",
+                    f"Choose default Player ({player_display})",
                     "Back",
                 ]
 
@@ -199,7 +204,7 @@ def main():
                         tracker.set_anilist_token(new_token)
                         print_success("Token saved.")
                         pause()
-                elif s_choice == 1:
+                if s_choice == 1:
                     langs = get_all_languages()
                     l_choice = select_from_list(
                         [l[1] for l in langs], "Select Language:"
@@ -207,6 +212,19 @@ def main():
                     tracker.set_language(langs[l_choice][0])
                     print_success(f"Language updated to: {langs[l_choice][1]}")
                     pause()
+
+                if s_choice == 2:
+
+                    players = get_all_players()
+                    p_choice = select_from_list(
+                        [p[1] for p in players], "Select default player:"
+                    )
+                    tracker.set_player(players[p_choice][0])
+                    print_success(f"Player updated to: {players[p_choice][1]}")
+                    pause()
+
+
+
                 else:
                     break
             continue

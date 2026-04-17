@@ -16,11 +16,31 @@ from .cli_utils import (
 )
 from .scraping import player
 from . import proxy
+from typing import Dict, Any
+from .tracker import tracker
 
 
 DEFAULT_USER_AGENT = (
     "Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0"
 )
+
+
+PLAYERS: Dict[str, Dict[str, str]] = {
+    "mpv": {"display": "mpv"},
+    "vlc": {"display": "vlc"},
+    "browser": {"display": "browser"},
+    "manual": {"display": "manual"},
+}
+
+
+def get_player_display(code: str, default: str = "manual") -> str:
+
+    return PLAYERS.get(code, {}).get("display", default)
+
+
+def get_all_players():
+
+    return [(code, f"{player['display']}") for code, player in PLAYERS.items()]
 
 
 def get_vlc_path():
@@ -162,15 +182,22 @@ def play_video(
         except Exception as e:
             print_error(f"Failed to download subtitles: {e}")
 
+    force_manual_mode = False
     while True:  # Loop to allow retrying with another player
-        players = ["mpv", "vlc", "browser", "← Back"]
-        player_choice = select_from_list(players, "🎮 Select video player:")
+        player_pref = tracker.get_player()
+        if force_manual_mode or not player_pref or player_pref == "manual":
+            players = ["mpv", "vlc", "browser", "← Back"]
+            player_choice = select_from_list(players, "🎮 Select video player:")
 
-        if players[player_choice] == "← Back":
-            return False
+            if players[player_choice] == "← Back":
+                return False
 
-        player_name = players[player_choice]
-        player_executable = None
+            player_name = players[player_choice]
+            player_executable = None
+
+        else:
+            player_name = player_pref
+            player_executable = None
 
         # --- 1. Preparation of Headers & Referer for both players ---
         # Calculate Referer
@@ -202,6 +229,7 @@ def play_video(
                 retry = handle_player_error("VLC")
                 if retry == 1:  # Back
                     return False
+                force_manual_mode = True
                 continue
         else:
             player_executable = shutil.which(player_name)
@@ -210,6 +238,7 @@ def play_video(
                 retry = handle_player_error(player_name)
                 if retry == 1:  # Back
                     return False
+                force_manual_mode = True
                 continue
 
         if player_name == "browser":
@@ -429,6 +458,7 @@ def play_video(
         elif retry == 1:  # Retry with same player
             continue
         else:  # Back
+            force_manual_mode = True
             return False
 
 
@@ -471,4 +501,5 @@ def select_and_play_player(
             )
             if retry == 1:  # Back
                 return False
+
             # Otherwise continue the loop to choose another player
