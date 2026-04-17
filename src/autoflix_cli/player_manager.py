@@ -32,6 +32,7 @@ PLAYERS: Dict[str, Dict[str, str]] = {
     "manual": {"display": "manual"},
 }
 
+
 def get_player_display(code: str, default: str = "manual") -> str:
 
     return PLAYERS.get(code, {}).get("display", default)
@@ -39,9 +40,7 @@ def get_player_display(code: str, default: str = "manual") -> str:
 
 def get_all_players():
 
-    return [
-        (code, f"{player['display']}") for code, player in PLAYERS.items()
-    ]
+    return [(code, f"{player['display']}") for code, player in PLAYERS.items()]
 
 
 def get_vlc_path():
@@ -183,10 +182,10 @@ def play_video(
         except Exception as e:
             print_error(f"Failed to download subtitles: {e}")
 
-
     force_manual_mode = False
     while True:  # Loop to allow retrying with another player
-        if force_manual_mode or tracker.get_player() == "manual":
+        player_pref = tracker.get_player()
+        if force_manual_mode or not player_pref or player_pref == "manual":
             players = ["mpv", "vlc", "browser", "← Back"]
             player_choice = select_from_list(players, "🎮 Select video player:")
 
@@ -196,8 +195,8 @@ def play_video(
             player_name = players[player_choice]
             player_executable = None
 
-        else :
-            player_name = tracker.get_player()
+        else:
+            player_name = player_pref
             player_executable = None
 
         # --- 1. Preparation of Headers & Referer for both players ---
@@ -462,6 +461,7 @@ def play_video(
             force_manual_mode = True
             return False
 
+
 def select_and_play_player(
     supported_players: list, referer: str, title: str, subtitle_url: str = None
 ) -> bool:
@@ -503,4 +503,3 @@ def select_and_play_player(
                 return False
 
             # Otherwise continue the loop to choose another player
-
