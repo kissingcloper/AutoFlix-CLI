@@ -150,6 +150,8 @@ def handle_anilist_continue():
             return
 
         season = _auto_select_season(series.seasons, media_title, romaji_title)
+        if not season:
+            return
         tracker.set_anilist_mapping("ArkAnime", series.title, media_id, season.title)
 
         episodes = season.episodes
@@ -158,6 +160,8 @@ def handle_anilist_continue():
             return
 
         start_ep_idx = _auto_select_episode(episodes, next_episode_num)
+        if start_ep_idx is None:
+            return
         
         class SeriesDummy:
             def __init__(self, t): self.title = t
@@ -193,6 +197,8 @@ def handle_anilist_continue():
             return
 
         selected_season_access = _auto_select_season(series.seasons, media_title, romaji_title)
+        if not selected_season_access:
+            return
         
         print_info(f"Loading [cyan]{selected_season_access.title}[/cyan]...")
         season = anime_sama_scraper.get_season(selected_season_access.url)
@@ -203,11 +209,15 @@ def handle_anilist_continue():
             print_warning("No episodes found.")
             return
             
-        lang_idx = select_from_list(langs, "🌍 Select Language:")
+        lang_idx = select_from_list(langs + ["← Back"], "🌍 Select Language:")
+        if lang_idx == len(langs):
+            return
         episodes = season.episodes[langs[lang_idx]]
 
         start_ep_idx = _auto_select_episode(episodes, next_episode_num)
-        
+        if start_ep_idx is None:
+            return
+
         class SeriesDummy:
             def __init__(self, t): self.title = t
         series_dummy = SeriesDummy(series.title)
@@ -317,10 +327,13 @@ def _auto_select_season(series_seasons, media_title, romaji_title):
                     break
 
     season_idx = select_from_list(
-        [s.title for s in series_seasons],
+        [s.title for s in series_seasons] + ["← Back"],
         "📺 Select Season:",
         default_index=default_season_idx,
     )
+
+    if season_idx == len(series_seasons):
+        return None
 
     if target_season_num is not None:
         print_info(f"AniList suggests [bold]Season {target_season_num}[/bold].")
@@ -340,7 +353,10 @@ def _auto_select_episode(episodes, next_episode_num):
 
     if not found:
         print_warning(f"Could not automatically find Episode {next_episode_num}. Please select:")
-        start_ep_idx = select_from_list([e.title for e in episodes], "📺 Select Episode:")
+        ep_options = [e.title for e in episodes] + ["← Back"]
+        start_ep_idx = select_from_list(ep_options, "📺 Select Episode:")
+        if start_ep_idx == len(episodes):
+            return None
     else:
         print_success(f"Found Episode {next_episode_num}: {episodes[start_ep_idx].title}")
 

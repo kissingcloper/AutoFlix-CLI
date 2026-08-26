@@ -128,10 +128,12 @@ def handle_goldenms():
 
             sorted_seasons = sorted(season_map.keys())
 
-            season_options = [f"Season {s}" for s in sorted_seasons] + ["Manual Input"]
+            season_options = [f"Season {s}" for s in sorted_seasons] + ["Manual Input", "← Back"]
             s_idx = select_from_list(season_options, "Select Season:")
 
-            if s_idx == len(sorted_seasons):
+            if s_idx == len(sorted_seasons) + 1:
+                return
+            elif s_idx == len(sorted_seasons):
                 season_str = get_user_input("Enter season number", default="1")
                 season = int(season_str) if season_str.isdigit() else 1
                 ep_str = get_user_input("Enter episode number", default="1")
@@ -227,16 +229,21 @@ def _flow_goldenms_stream(
                 [
                     f"Yes (load {len(embedded_tracks)} tracks: {langs_preview})",
                     "No (search external subtitles)",
+                    "← Back",
                 ],
                 "The stream has embedded subtitle tracks (language picked in the player):",
             )
             if use_embedded == 0:
                 subtitle_tracks = embedded_tracks
+            elif use_embedded == 2:
+                continue
 
         if subtitle_tracks is None:
             want_subs = select_from_list(
-                ["Yes", "No"], f"Search for {lang_name} subtitles?"
+                ["Yes", "No", "← Back"], f"Search for {lang_name} subtitles?"
             )
+            if want_subs == 2:
+                continue
             if want_subs == 0:
                 current_imdb_id = imdb_id
                 if not current_imdb_id:
@@ -258,11 +265,13 @@ def _flow_goldenms_stream(
                     if subs:
                         sub_opts = [
                             f"{s['source']} - {s.get('lang', lang_name)}" for s in subs
-                        ] + ["Skip Subtitles"]
+                        ] + ["← Back", "Skip Subtitles"]
                         sub_choice = select_from_list(sub_opts, "Select Subtitle:")
                         if sub_choice < len(subs):
                             subtitle_tracks = [subs[sub_choice]]
                             print_info(f"Selected subtitle: {subs[sub_choice]['url']}")
+                        elif sub_choice == len(subs):
+                            continue
                     else:
                         print_warning(f"No {lang_name} subtitles found.")
                         pause()

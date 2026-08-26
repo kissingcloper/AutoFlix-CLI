@@ -211,16 +211,20 @@ def handle_arkanime():
                 [
                     f"Resume {saved_progress['season_title']} - {saved_progress['episode_title']}",
                     "Browse Seasons",
+                    "← Cancel",
                 ],
                 f"Found saved progress for {series.title}:",
             )
             if choice == 0:
                 resume_arkanime(saved_progress)
                 continue
+            if choice == 2:
+                continue
 
-        season_idx = select_from_list(
-            [s.title for s in series.seasons], "📺 Select Season:"
-        )
+        season_options = [s.title for s in series.seasons] + ["← Back"]
+        season_idx = select_from_list(season_options, "📺 Select Season:")
+        if season_idx == len(series.seasons):
+            continue
         season = series.seasons[season_idx]
 
         if not season.episodes:
@@ -228,9 +232,10 @@ def handle_arkanime():
             pause()
             continue
 
-        ep_idx = select_from_list(
-            [e.title for e in season.episodes], "📺 Select Episode:"
-        )
+        ep_options = [e.title for e in season.episodes] + ["← Back"]
+        ep_idx = select_from_list(ep_options, "📺 Select Episode:")
+        if ep_idx == len(season.episodes):
+            continue
 
         while True:
             selected_episode = season.episodes[ep_idx]
