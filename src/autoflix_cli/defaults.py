@@ -101,7 +101,7 @@ DEFAULT_PLAYERS = {
     "veev": {"type": "veev", "ext": "mp4"},
     "xtremestream": {"type": "xtremestream"},
     "montmyoboky": {"type": "montmyoboky"},
-    "vidzy": { "type": "vidzy" }
+    "vidzy": { "type": "vidzy", "referrer": "https://vidzy.org/", }
 }
 
 DEFAULT_NEW_URL = {

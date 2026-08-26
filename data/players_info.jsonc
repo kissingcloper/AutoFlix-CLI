@@ -105,5 +105,5 @@
   },
   "xtremestream": { "type": "xtremestream" },
   "montmyoboky": {"type": "montmyoboky"},
-  "vidzy": { "type": "vidzy" }
+  "vidzy": { "type": "vidzy", "referrer": "https://vidzy.org/" }
 }

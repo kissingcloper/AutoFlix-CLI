@@ -610,29 +610,7 @@ def get_hls_link_vidzy(embed_url: str, headers: dict) -> str:
             f"Vidzy: decoded source is not a valid HTTP URL: {real_url}"
         )
 
-
-    vidzy_headers = {
-        **headers,
-        "Referer": "https://vidzy.cc/",
-        "Origin": "https://vidzy.cc",
-        "Sec-Fetch-Dest": "empty",
-        "Sec-Fetch-Mode": "cors",
-        "Sec-Fetch-Site": "same-site",
-    }
-
-    encoded_url = quote(real_url, safe="")
-    encoded_headers = quote(
-        json.dumps(vidzy_headers),
-        safe="",
-    )
-
-    from .. import proxy
-
-    return (
-        f"{proxy.PROXY_URL}/stream"
-        f"?url={encoded_url}"
-        f"&headers={encoded_headers}"
-    )
+    return real_url
 
 
 def get_hls_link(url: str, headers: dict = {}, return_subs: bool = False) -> str | tuple[str | None, str | None] | None:
