@@ -5,6 +5,7 @@ from bs4 import BeautifulSoup
 from ..proxy import DNS_OPTIONS
 from ..config_loader import load_remote_jsonc
 from ..defaults import DEFAULT_PLAYERS, DEFAULT_NEW_URL, DEFAULT_KAKAFLIX_PLAYERS
+from ..cli_utils import print_warning
 import re, base64
 
 import json
@@ -598,6 +599,11 @@ def get_hls_link(url: str, headers: dict = {}, return_subs: bool = False) -> str
                 stream_url = get_hls_link_xtremestream(url, headers)
             elif parse_type == "montmyoboky":
                 stream_url, subtitle_url = get_hls_link_montmyoboky(url, headers)
+            else:
+                print_warning(
+                    f"Player type '{parse_type}' is not supported in your version. "
+                    "Please update: pip install --upgrade autoflix-cli"
+                )
 
             if return_subs:
                 return stream_url, subtitle_url
