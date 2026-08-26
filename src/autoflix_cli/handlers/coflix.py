@@ -110,9 +110,10 @@ def handle_coflix():
                     resume_coflix(saved_progress)
                     continue
 
-            season_idx = select_from_list(
-                [s.title for s in content.seasons], "📺 Select Season:"
-            )
+            season_options = [s.title for s in content.seasons] + ["← Back"]
+            season_idx = select_from_list(season_options, "📺 Select Season:")
+            if season_idx == len(content.seasons):
+                continue
             selected_season = content.seasons[season_idx]
 
             if not selected_season.episodes:
@@ -120,9 +121,10 @@ def handle_coflix():
                 pause()
                 continue
 
-            ep_idx = select_from_list(
-                [e.title for e in selected_season.episodes], "📺 Select Episode:"
-            )
+            ep_options = [e.title for e in selected_season.episodes] + ["← Back"]
+            ep_idx = select_from_list(ep_options, "📺 Select Episode:")
+            if ep_idx == len(selected_season.episodes):
+                continue
 
             while True:
                 selected_episode = selected_season.episodes[ep_idx]
