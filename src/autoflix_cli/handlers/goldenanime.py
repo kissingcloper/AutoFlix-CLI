@@ -47,6 +47,7 @@ def search_imdb_id(title: str):
             if valid_metas:
                 choices.append("Enter manually")
                 choices.append("Skip subtitles")
+                choices.append("← Back")
 
                 idx = select_from_list(choices, f"Select IMDB match for '{title}':")
                 if idx < len(valid_metas):
@@ -55,6 +56,8 @@ def search_imdb_id(title: str):
                 elif idx == len(valid_metas):
                     manual = get_user_input("Enter IMDB ID manually (e.g. tt0388629)")
                     return manual, False
+                elif idx == len(valid_metas) + 1:
+                    return None, False
                 else:
                     return None, False
     except Exception as e:
@@ -99,7 +102,7 @@ def handle_goldenanime():
             media_options = [
                 f"{m['title']['english'] or m['title']['romaji']} ({m.get('seasonYear', '?')}) - {m.get('episodes', '?')} eps"
                 for m in results
-            ] + ["Manual input (Skip AniList)"]
+            ] + ["Manual input (Skip AniList)", "← Back"]
             m_idx = select_from_list(media_options, "Select AniList Match:")
             if m_idx < len(results):
                 match = results[m_idx]
@@ -107,19 +110,24 @@ def handle_goldenanime():
                 title = match["title"]["english"] or match["title"]["romaji"]
                 max_episodes = match.get("episodes")
                 cover_url = match.get("coverImage", {}).get("medium")
+            elif m_idx == len(results) + 1:
+                return
 
     # Episode Selection
     episode = 1
     if max_episodes:
         ep_options = [f"Episode {i}" for i in range(1, max_episodes + 1)] + [
-            "Manual input"
+            "Manual input",
+            "← Back",
         ]
         ep_idx = select_from_list(ep_options, "📺 Select Episode:")
         if ep_idx < max_episodes:
             episode = ep_idx + 1
-        else:
+        elif ep_idx == max_episodes:
             ep_input = get_user_input("Episode number")
             episode = int(ep_input) if ep_input and ep_input.isdigit() else 1
+        else:
+            return
     else:
         ep_input = get_user_input("Episode number (default 1)")
         episode = int(ep_input) if ep_input and ep_input.isdigit() else 1
@@ -196,11 +204,14 @@ def _flow_goldenanime_stream(
                 [
                     f"Yes (load {len(embedded_tracks)} tracks: {langs_preview})",
                     "No (search external subtitles)",
+                    "← Back",
                 ],
                 "The stream has embedded subtitle tracks (language picked in the player):",
             )
             if use_embedded == 0:
                 subtitle_tracks = embedded_tracks
+            elif use_embedded == 2:
+                continue
 
         if subtitle_tracks is None:
             # Try to resolve title if missing
@@ -213,8 +224,10 @@ def _flow_goldenanime_stream(
                     ).get("romaji")
 
             want_subs = select_from_list(
-                ["Yes", "No"], f"Search for {lang_name} subtitles?"
+                ["Yes", "No", "← Back"], f"Search for {lang_name} subtitles?"
             )
+            if want_subs == 2:
+                continue
             if want_subs == 0:
                 imdb_id = None
                 is_movie = False
@@ -239,7 +252,8 @@ def _flow_goldenanime_stream(
                                     default_season_idx = detected_season - 1
 
                         season_options = [f"Season {i}" for i in range(1, 11)] + [
-                            "Manual Input"
+                            "Manual Input",
+                            "← Back",
                         ]
                         s_idx = select_from_list(
                             season_options,
@@ -248,13 +262,15 @@ def _flow_goldenanime_stream(
                         )
                         if s_idx < 10:
                             season = s_idx + 1
-                        else:
+                        elif s_idx == 10:
                             season_input = get_user_input("Season number (default 1)")
                             season = (
                                 int(season_input)
                                 if season_input and season_input.isdigit()
                                 else 1
                             )
+                        else:
+                            continue
 
                     print_info(f"Searching for {lang_name} subtitles...")
                     anidb_id = None
@@ -273,11 +289,13 @@ def _flow_goldenanime_stream(
                         # Show a shortened list to make it faster
                         sub_choices = [
                             f"{s['source']} - {s.get('lang', lang_name)}" for s in subs[:6]
-                        ] + ["None"]
+                        ] + ["← Back", "None"]
                         sub_idx = select_from_list(sub_choices, "📝 Select Subtitle:")
-                        if sub_idx < len(sub_choices) - 1:
+                        if sub_idx < len(subs[:6]):
                             subtitle_tracks = [subs[sub_idx]]
                             print_info(f"Selected subtitle from: {subs[sub_idx]['source']}")
+                        elif sub_idx == len(subs[:6]):
+                            continue
                     else:
                         print_warning(f"No {lang_name} subtitles found.")
 
