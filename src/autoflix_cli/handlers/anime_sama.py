@@ -137,94 +137,95 @@ def handle_anime_sama():
             pause()
             continue
 
-        options = [f"{r.title} ({', '.join(r.genres)})" for r in results] + ["← Back"]
-        choice_idx = select_from_list(options, "📺 Search Results:")
+        while True:
+            options = [f"{r.title} ({', '.join(r.genres)})" for r in results] + ["← Back"]
+            choice_idx = select_from_list(options, "📺 Search Results:")
 
-        if choice_idx == len(results):
-            continue
+            if choice_idx == len(results):
+                break
 
-        selection = results[choice_idx]
+            selection = results[choice_idx]
 
-        print_info(f"Loading [cyan]{selection.title}[/cyan]...")
-        series = anime_sama.get_series(selection.url)
+            print_info(f"Loading [cyan]{selection.title}[/cyan]...")
+            series = anime_sama.get_series(selection.url)
 
-        if not series.seasons:
-            print_warning("No seasons found.")
-            pause()
-            continue
-
-        saved_progress = tracker.get_series_progress("Anime-Sama", series.title)
-        if saved_progress:
-            choice = select_from_list(
-                [
-                    f"Resume {saved_progress['season_title']} - {saved_progress['episode_title']}",
-                    "Browse Seasons",
-                    "← Cancel",
-                ],
-                f"Found saved progress for {series.title}:",
-            )
-            if choice == 0:
-                resume_anime_sama(saved_progress)
-                return
-            if choice == 2:
+            if not series.seasons:
+                print_warning("No seasons found.")
+                pause()
                 continue
 
-        season_options = [s.title for s in series.seasons] + ["← Back"]
-        season_idx = select_from_list(season_options, "📺 Select Season:")
-        if season_idx == len(series.seasons):
-            continue
-        selected_season_access = series.seasons[season_idx]
+            saved_progress = tracker.get_series_progress("Anime-Sama", series.title)
+            if saved_progress:
+                choice = select_from_list(
+                    [
+                        f"Resume {saved_progress['season_title']} - {saved_progress['episode_title']}",
+                        "Browse Seasons",
+                        "← Cancel",
+                    ],
+                    f"Found saved progress for {series.title}:",
+                )
+                if choice == 0:
+                    resume_anime_sama(saved_progress)
+                    return
+                if choice == 2:
+                    continue
 
-        print_info(f"Loading [cyan]{selected_season_access.title}[/cyan]...")
-        season = anime_sama.get_season(selected_season_access.url)
+            season_options = [s.title for s in series.seasons] + ["← Back"]
+            season_idx = select_from_list(season_options, "📺 Select Season:")
+            if season_idx == len(series.seasons):
+                continue
+            selected_season_access = series.seasons[season_idx]
 
-        langs = list(season.episodes.keys())
-        if not langs:
-            print_warning("No episodes found.")
-            pause()
-            continue
+            print_info(f"Loading [cyan]{selected_season_access.title}[/cyan]...")
+            season = anime_sama.get_season(selected_season_access.url)
 
-        lang_options = langs + ["← Back"]
-        lang_idx = select_from_list(lang_options, "🌍 Select Language:")
-        if lang_idx == len(langs):
-            continue
-        selected_lang = langs[lang_idx]
-        episodes = season.episodes[selected_lang]
+            langs = list(season.episodes.keys())
+            if not langs:
+                print_warning("No episodes found.")
+                pause()
+                continue
 
-        ep_options = [e.title for e in episodes] + ["← Back"]
-        ep_idx = select_from_list(ep_options, "📺 Select Episode:")
-        if ep_idx == len(episodes):
-            continue
+            lang_options = langs + ["← Back"]
+            lang_idx = select_from_list(lang_options, "🌍 Select Language:")
+            if lang_idx == len(langs):
+                continue
+            selected_lang = langs[lang_idx]
+            episodes = season.episodes[selected_lang]
 
-        while True:
-            selected_episode = episodes[ep_idx]
+            ep_options = [e.title for e in episodes] + ["← Back"]
+            ep_idx = select_from_list(ep_options, "📺 Select Episode:")
+            if ep_idx == len(episodes):
+                continue
 
-            success = play_episode_flow(
-                provider_name="Anime-Sama",
-                series_title=series.title,
-                season_title=season.title,
-                episode=selected_episode,
-                series_url=series.url,
-                season_url=selected_season_access.url,
-                logo_url=series.img,
-                headers={"Referer": anime_sama.website_origin},
-                anilist_callback=lambda: _update_anilist_progress(
-                    series, season, selected_episode
-                ),
-            )
+            while True:
+                selected_episode = episodes[ep_idx]
 
-            if success:
-                if ep_idx + 1 < len(episodes):
-                    next_ep = episodes[ep_idx + 1]
-                    choice = select_from_list(
-                        ["Yes", "No"], f"Play next episode: {next_ep.title}?"
-                    )
-                    if choice == 0:
-                        ep_idx += 1
-                        continue
-                break
-            else:
-                break
+                success = play_episode_flow(
+                    provider_name="Anime-Sama",
+                    series_title=series.title,
+                    season_title=season.title,
+                    episode=selected_episode,
+                    series_url=series.url,
+                    season_url=selected_season_access.url,
+                    logo_url=series.img,
+                    headers={"Referer": anime_sama.website_origin},
+                    anilist_callback=lambda: _update_anilist_progress(
+                        series, season, selected_episode
+                    ),
+                )
+
+                if success:
+                    if ep_idx + 1 < len(episodes):
+                        next_ep = episodes[ep_idx + 1]
+                        choice = select_from_list(
+                            ["Yes", "No"], f"Play next episode: {next_ep.title}?"
+                        )
+                        if choice == 0:
+                            ep_idx += 1
+                            continue
+                    break
+                else:
+                    break
 
 
 def resume_anime_sama(data):
